@@ -1,0 +1,87 @@
+--- Makefile.am.orig	2018-03-12 00:11:28.912695294 +0100
++++ Makefile.am	2018-03-12 00:11:44.195613255 +0100
+@@ -2,7 +2,7 @@
+ 
+ ACLOCAL_AMFLAGS = -I m4
+ 
+-SUBDIRS = src bindings po doc perf
++SUBDIRS = src bindings po perf
+ 
+ EXTRA_DIST = \
+ 	HACKING \
+@@ -20,7 +20,6 @@
+ pkgconfig_DATA = vte-$(VTE_API_VERSION).pc
+ 
+ DISTCHECK_CONFIGURE_FLAGS = \
+-	--enable-gtk-doc \
+ 	--enable-introspection \
+ 	--disable-vala \
+ 	--disable-test-application \
+
+--- Makefile.in.orig	2018-03-12 00:10:02.093161344 +0100
++++ Makefile.in	2018-03-12 00:11:47.693594477 +0100
+@@ -192,11 +192,11 @@
+ ETAGS = etags
+ CTAGS = ctags
+ CSCOPE = cscope
+-DIST_SUBDIRS = src bindings po doc perf glade
++DIST_SUBDIRS = src bindings po perf glade
+ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
+ 	$(srcdir)/vte.pc.in $(top_srcdir)/src/vte/vteversion.h.in \
+ 	AUTHORS COPYING ChangeLog NEWS README compile config.guess \
+-	config.sub install-sh ltmain.sh missing
++	config.sub depcomp install-sh ltmain.sh missing
+ DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+ distdir = $(PACKAGE)-$(VERSION)
+ top_distdir = $(distdir)
+@@ -453,7 +453,7 @@
+ top_srcdir = @top_srcdir@
+ NULL = 
+ ACLOCAL_AMFLAGS = -I m4
+-SUBDIRS = src bindings po doc perf $(am__append_1)
++SUBDIRS = src bindings po perf $(am__append_1)
+ EXTRA_DIST = \
+ 	HACKING \
+ 	autogen.sh \
+@@ -464,7 +464,6 @@
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = vte-$(VTE_API_VERSION).pc
+ DISTCHECK_CONFIGURE_FLAGS = \
+-	--enable-gtk-doc \
+ 	--enable-introspection \
+ 	--disable-vala \
+--disable-test-application \
+
+--- Makefile.orig	2018-03-12 00:07:02.514125329 +0100
++++ Makefile	2018-03-12 00:11:47.821593790 +0100
+@@ -192,11 +192,11 @@
+ ETAGS = etags
+ CTAGS = ctags
+ CSCOPE = cscope
+-DIST_SUBDIRS = src bindings po doc perf glade
++DIST_SUBDIRS = src bindings po perf glade
+ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
+ 	$(srcdir)/vte.pc.in $(top_srcdir)/src/vte/vteversion.h.in \
+ 	AUTHORS COPYING ChangeLog NEWS README compile config.guess \
+-	config.sub install-sh ltmain.sh missing
++	config.sub depcomp install-sh ltmain.sh missing
+ DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+ distdir = $(PACKAGE)-$(VERSION)
+ top_distdir = $(distdir)
+@@ -453,7 +453,7 @@
+ top_srcdir = .
+ NULL = 
+ ACLOCAL_AMFLAGS = -I m4
+-SUBDIRS = src bindings po doc perf $(am__append_1)
++SUBDIRS = src bindings po perf $(am__append_1)
+ EXTRA_DIST = \
+ 	HACKING \
+ 	autogen.sh \
+@@ -464,7 +464,6 @@
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = vte-$(VTE_API_VERSION).pc
+ DISTCHECK_CONFIGURE_FLAGS = \
+-	--enable-gtk-doc \
+ 	--enable-introspection \
+ 	--disable-vala \
+--disable-test-application \

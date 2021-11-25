@@ -1,0 +1,2279 @@
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter01/askforhelp.xml BOOK-multilib/chapter01/askforhelp.xml
+--- BOOK-orig/chapter01/askforhelp.xml	2018-08-10 07:50:45.000000000 +0200
++++ BOOK-multilib/chapter01/askforhelp.xml	2018-08-12 21:15:20.298266973 +0200
+@@ -39,7 +39,8 @@
+     <itemizedlist>
+       <listitem>
+         <para>The version of the book being used (in this case 
+-              <phrase revision="sysv">&version;</phrase>
++              <phrase arch="default" revision="sysv">&version;</phrase>
++              <phrase arch="multilib" revision="sysv">&version;-multilib</phrase>
+               <phrase revision="systemd">&versiond;</phrase>)</para>
+       </listitem>
+       <listitem>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter01/changelog.xml BOOK-multilib/chapter01/changelog.xml
+--- BOOK-orig/chapter01/changelog.xml	2018-08-10 07:50:45.000000000 +0200
++++ BOOK-multilib/chapter01/changelog.xml	2018-08-12 21:13:51.669498909 +0200
+@@ -11,7 +11,8 @@
+   <title>Changelog</title>
+ 
+   <para>This is version 
+-        <phrase revision="sysv">&version;</phrase>
++        <phrase arch="default" revision="sysv">&version;</phrase>
++        <phrase arch="multilib" revision="sysv">&version;-multilib</phrase>
+         <phrase revision="systemd">&versiond;</phrase>
+   of the Linux From Scratch book, dated
+   &releasedate;. If this book is more than six months old, a newer and better
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter03/packages.xml BOOK-multilib/chapter03/packages.xml
+--- BOOK-orig/chapter03/packages.xml	2018-08-10 07:50:45.000000000 +0200
++++ BOOK-multilib/chapter03/packages.xml	2018-08-10 09:43:39.531077226 +0200
+@@ -356,6 +356,15 @@
+     </varlistentry>
+ 
+     <varlistentry>
++      <term>ISL (&isl-version;) - <token>&isl-size;</token>:</term>
++      <listitem>
++        <para>Home page: <ulink url="&isl-home;"/></para>
++        <para>Download: <ulink url="&isl-url;"/></para>
++        <para>MD5 sum: <literal>&isl-md5;</literal></para>
++      </listitem>
++    </varlistentry>
++
++    <varlistentry>
+       <term>Kbd (&kbd-version;) - <token>&kbd-size;</token>:</term>
+       <listitem>
+         <para>Home page: <ulink url="&kbd-home;"/></para>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter04/settingenviron.xml BOOK-multilib/chapter04/settingenviron.xml
+--- BOOK-orig/chapter04/settingenviron.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter04/settingenviron.xml	2018-08-12 13:38:55.044890706 +0200
+@@ -37,7 +37,7 @@
+   <filename>.bashrc</filename> file instead. Create the
+   <filename>.bashrc</filename> file now:</para>
+ 
+-<screen><userinput>cat &gt; ~/.bashrc &lt;&lt; "EOF"
++<screen arch="default"><userinput>cat &gt; ~/.bashrc &lt;&lt; "EOF"
+ <literal>set +h
+ umask 022
+ LFS=/mnt/lfs
+@@ -46,6 +46,17 @@
+ PATH=/tools/bin:/bin:/usr/bin
+ export LFS LC_ALL LFS_TGT PATH</literal>
+ EOF</userinput></screen>
++<screen arch="multilib"><userinput>cat &gt; ~/.bashrc &lt;&lt; "EOF"
++<literal>set +h
++umask 022
++LFS=/mnt/lfs
++LC_ALL=POSIX
++LFS_TGT=x86_64-lfs-linux-gnu
++LFS_TGT32=i686-lfs-linux-gnu
++LFS_TGTX32=x86_64-lfs-linux-gnux32
++PATH=/tools/bin:/bin:/usr/bin
++export LFS LC_ALL LFS_TGT LFS_TGT32 LFS_TGTX32 PATH</literal>
++EOF</userinput></screen>
+ 
+   <para>The <command>set +h</command> command turns off
+   <command>bash</command>'s hash function. Hashing is ordinarily a useful
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter05/binutils-pass1.xml BOOK-multilib/chapter05/binutils-pass1.xml
+--- BOOK-orig/chapter05/binutils-pass1.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter05/binutils-pass1.xml	2018-08-12 17:07:56.147972097 +0200
+@@ -72,12 +72,20 @@
+ 
+     <para>Now prepare Binutils for compilation:</para>
+ 
+-<screen><userinput remap="configure">../configure --prefix=/tools            \
++    <screen arch="default"><userinput remap="configure">../configure --prefix=/tools \
+              --with-sysroot=$LFS        \
+              --with-lib-path=/tools/lib \
+              --target=$LFS_TGT          \
+              --disable-nls              \
+              --disable-werror</userinput></screen>
++    <screen arch="multilib"><userinput remap="configure">../configure --prefix=/tools \
++             --with-sysroot=$LFS                     \
++             --with-lib-path=/tools/lib:/tools/lib32:/tools/libx32 \
++             --target=$LFS_TGT                       \
++             --disable-nls                           \
++             --disable-werror                        \
++             --enable-64-bit-bfd                     \
++             --enable-multilib</userinput></screen>
+ 
+     <variablelist>
+       <title>The meaning of the configure options:</title>
+@@ -146,12 +154,16 @@
+     tests at this point are minimal since the programs from this
+     first pass will soon be replaced by those from the second.</para>
+ 
+-    <para>If building on x86_64, create a symlink to ensure the sanity of
++    <para arch="default">If building on x86_64, create a symlink to ensure
++    the sanity of the toolchain:</para>
++    <para arch="multilib">Create a symlink to ensure the sanity of
+     the toolchain:</para>
+ 
+-<screen><userinput remap="install">case $(uname -m) in
++<screen arch="default"><userinput remap="install">case $(uname -m) in
+   x86_64) mkdir -v /tools/lib &amp;&amp; ln -sv lib /tools/lib64 ;;
+ esac</userinput></screen>
++<screen arch="multilib"><userinput remap="install">mkdir -v /tools/lib &amp;&amp;
++ln -sv lib /tools/lib64</userinput></screen>
+ 
+     <para>Install the package:</para>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter05/binutils-pass2.xml BOOK-multilib/chapter05/binutils-pass2.xml
+--- BOOK-orig/chapter05/binutils-pass2.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter05/binutils-pass2.xml	2018-08-12 17:11:26.922274532 +0200
+@@ -50,7 +50,7 @@
+ 
+     <para>Prepare Binutils for compilation:</para>
+ 
+-<screen><userinput remap="configure">CC=$LFS_TGT-gcc                \
++<screen arch="default"><userinput remap="configure">CC=$LFS_TGT-gcc                \
+ AR=$LFS_TGT-ar                 \
+ RANLIB=$LFS_TGT-ranlib         \
+ ../configure                   \
+@@ -59,6 +59,17 @@
+     --disable-werror           \
+     --with-lib-path=/tools/lib \
+     --with-sysroot</userinput></screen>
++<screen arch="multilib"><userinput remap="configure">CC=$LFS_TGT-gcc                \
++AR=$LFS_TGT-ar                 \
++RANLIB=$LFS_TGT-ranlib         \
++../configure                   \
++    --prefix=/tools            \
++    --disable-nls              \
++    --disable-werror           \
++    --with-lib-path=/tools/lib:/tools/lib32:/tools/libx32 \
++    --with-sysroot             \
++    --enable-64-bit-bfd        \
++    --enable-multilib</userinput></screen>
+ 
+     <variablelist>
+       <title>The meaning of the new configure options:</title>
+@@ -72,7 +83,7 @@
+         </listitem>
+       </varlistentry>
+ 
+-      <varlistentry>
++      <varlistentry arch="default">
+         <term><parameter>--with-lib-path=/tools/lib</parameter></term>
+         <listitem>
+           <para>This tells the configure script to specify the library
+@@ -82,6 +93,18 @@
+           library directories on the host.</para>
+         </listitem>
+       </varlistentry>
++      <varlistentry arch="multilib">
++        <term><parameter>--with-lib-path=/tools/lib:...</parameter></term>
++        <listitem>
++          <para>This tells the configure script to specify the library
++          search path during the compilation of Binutils, resulting in
++          <filename class="directory">/tools/lib</filename>,
++          <filename class="directory">/tools/lib32</filename> and
++          <filename class="directory">/tools/libx32</filename> being passed
++          to the linker. This prevents the linker from searching through
++          library directories on the host.</para>
++        </listitem>
++      </varlistentry>
+ 
+       <varlistentry>
+         <term><parameter>--with-sysroot</parameter></term>
+@@ -93,6 +116,20 @@
+         </listitem>
+       </varlistentry>
+ 
++      <varlistentry arch="multilib">
++        <term><parameter>--enable-64-bit-bfd</parameter></term>
++        <listitem>
++          <para>TODO</para>
++        </listitem>
++      </varlistentry>
++      
++      <varlistentry arch="multilib">
++        <term><parameter>--enable-multilib</parameter></term>
++        <listitem>
++          <para>TODO</para>
++        </listitem>
++      </varlistentry>
++      
+     </variablelist>
+ 
+     <para>Compile the package:</para>
+@@ -106,9 +143,12 @@
+     <para>Now prepare the linker for the <quote>Re-adjusting</quote> phase in
+     the next chapter:</para>
+ 
+-<screen><userinput remap="adjust">make -C ld clean
++<screen arch="default"><userinput remap="adjust">make -C ld clean
+ make -C ld LIB_PATH=/usr/lib:/lib
+ cp -v ld/ld-new /tools/bin</userinput></screen>
++<screen arch="multilib"><userinput remap="adjust">make -C ld clean
++make -C ld LIB_PATH=/usr/lib:/lib:/usr/lib32:/lib32:/usr/libx32:/libx32
++cp -v ld/ld-new /tools/bin</userinput></screen>
+ 
+     <variablelist>
+       <title>The meaning of the make parameters:</title>
+@@ -136,7 +176,6 @@
+       </varlistentry>
+ 
+     </variablelist>
+-
+   </sect2>
+ 
+   <sect2 role="content">
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter05/chapter05.xml BOOK-multilib/chapter05/chapter05.xml
+--- BOOK-orig/chapter05/chapter05.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter05/chapter05.xml	2018-08-12 15:43:32.533020721 +0200
+@@ -20,6 +20,7 @@
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glibc.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="libstdc++.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="binutils-pass2.xml"/>
++  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="zlib.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="gcc-pass2.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="tcl.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="expect.xml"/>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter05/gcc-pass1.xml BOOK-multilib/chapter05/gcc-pass1.xml
+--- BOOK-orig/chapter05/gcc-pass1.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter05/gcc-pass1.xml	2018-08-12 20:41:10.955251478 +0200
+@@ -55,12 +55,20 @@
+     directory and then change to the directory created.  Only then should you
+     proceed with the instructions below.</para></note>
+ 
+-<screen><userinput remap="pre">tar -xf ../mpfr-&mpfr-version;.tar.xz
++<screen arch="default"><userinput remap="pre">tar -xf ../mpfr-&mpfr-version;.tar.xz
+ mv -v mpfr-&mpfr-version; mpfr
+ tar -xf ../gmp-&gmp-version;.tar.xz
+ mv -v gmp-&gmp-version; gmp
+ tar -xf ../mpc-&mpc-version;.tar.gz
+ mv -v mpc-&mpc-version; mpc</userinput></screen>
++<screen arch="multilib"><userinput remap="pre">tar -xf ../mpfr-&mpfr-version;.tar.xz
++mv -v mpfr-&mpfr-version; mpfr
++tar -xf ../gmp-&gmp-version;.tar.xz
++mv -v gmp-&gmp-version; gmp
++tar -xf ../mpc-&mpc-version;.tar.gz
++mv -v mpc-&mpc-version; mpc
++tar -xf ../isl-&isl-version;.tar.bz2
++mv -v isl-&isl-version; isl</userinput></screen>
+ 
+     <para>The following command will change the location of GCC's default
+     dynamic linker to use the one installed in <filename
+@@ -71,7 +79,7 @@
+ <screen><userinput remap="pre">for file in gcc/config/{linux,i386/linux{,64}}.h
+ do
+   cp -uv $file{,.orig}
+-  sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&amp;@g' \
++  sed -e 's@/lib\(64\)\?\(32\)\?\(x32\)\?/ld@/tools&amp;@g' \
+       -e 's@/usr@/tools@g' $file.orig &gt; $file
+   echo '
+ #undef STANDARD_STARTFILE_PREFIX_1
+@@ -97,15 +105,25 @@
+     prevents unexpected changes to the original files in case the commands are
+     inadvertently run twice.</para>
+ 
+-    <para>Finally, on x86_64 hosts, set the default directory name for
++    <para arch="default">Finally, on x86_64 hosts, set the default directory name for
+     64-bit libraries to <quote>lib</quote>:</para>
+ 
+-<screen><userinput remap="pre">case $(uname -m) in
++<screen arch="default"><userinput remap="pre">case $(uname -m) in
+   x86_64)
+     sed -e '/m64=/s/lib64/lib/' \
+         -i.orig gcc/config/i386/t-linux64
+  ;;
+ esac</userinput></screen>
++<screen arch="multilib"><userinput remap="pre">sed -e '/m64=/s/lib64/lib/' \
++    -i.orig gcc/config/i386/t-linux64
++cat > gcc/config/i386/t-linux64 &lt;&lt;"EOF"
++comma=,
++MULTILIB_OPTIONS    = $(subst $(comma),/,$(TM_MULTILIB_CONFIG))
++MULTILIB_DIRNAMES   = $(patsubst m%, %, $(subst /, ,$(MULTILIB_OPTIONS)))
++MULTILIB_OSDIRNAMES = m64=../lib$(call if_multiarch,:x86_64-linux-gnu)
++MULTILIB_OSDIRNAMES+= m32=../lib32$(call if_multiarch,:i386-linux-gnu)
++MULTILIB_OSDIRNAMES+= mx32=../libx32$(call if_multiarch,:x86_64-linux-gnux32)
++EOF</userinput></screen>
+ 
+ <!--
+     <para>GCC doesn't detect stack protection correctly, which causes problems
+@@ -128,7 +146,7 @@
+ 
+     <para>Prepare GCC for compilation:</para>
+ 
+-<screen><userinput remap="configure">../configure                                       \
++<screen arch="default"><userinput remap="configure">../configure                                       \
+     --target=$LFS_TGT                              \
+     --prefix=/tools                                \
+     --with-glibc-version=2.11                      \
+@@ -150,6 +168,30 @@
+     --disable-libvtv                               \
+     --disable-libstdcxx                            \
+     --enable-languages=c,c++</userinput></screen>
++<screen arch="multilib"><userinput remap="configure">../configure                                       \
++    --target=$LFS_TGT                              \
++    --prefix=/tools                                \
++    --with-glibc-version=2.11                      \
++    --with-sysroot=$LFS                            \
++    --with-newlib                                  \
++    --without-headers                              \
++    --with-local-prefix=/tools                     \
++    --with-native-system-header-dir=/tools/include \
++    --disable-nls                                  \
++    --disable-shared                               \
++    --enable-multilib                              \
++    --with-multilib-list=m32,m64,mx32              \
++    --disable-decimal-float                        \
++    --disable-threads                              \
++    --disable-libatomic                            \
++    --disable-libgomp                              \
++    --disable-libmpx                               \
++    --disable-libquadmath                          \
++    --disable-libssp                               \
++    --disable-libvtv                               \
++    --disable-libstdcxx                            \
++    --enable-languages=c,c++</userinput></screen>
++
+     <variablelist>
+       <title>The meaning of the configure options:</title>
+ 
+@@ -219,13 +261,20 @@
+         </listitem>
+       </varlistentry>
+ 
+-      <varlistentry>
++      <varlistentry arch="default">
+         <term><parameter>--disable-multilib</parameter></term>
+         <listitem>
+           <para>On x86_64, LFS does not yet support a multilib configuration.
+           This switch is harmless for x86.</para>
+         </listitem>
+       </varlistentry>
++      <varlistentry arch="multilib">
++        <term><parameter>--enable-multilib, --with-multilib-list=m32,m64,mx32</parameter></term>
++        <listitem>
++          <para>LFS now supports a multilib configuration. Enable it for the 32bit,
++          the 64-bit and the mixed mode.</para>
++        </listitem>
++      </varlistentry>
+ 
+       <varlistentry>
+         <term><parameter>--enable-languages=c,c++</parameter></term>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter05/gcc-pass2.xml BOOK-multilib/chapter05/gcc-pass2.xml
+--- BOOK-orig/chapter05/gcc-pass2.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter05/gcc-pass2.xml	2018-08-14 06:58:55.744371077 +0200
+@@ -73,7 +73,7 @@
+ <screen><userinput remap="pre">for file in gcc/config/{linux,i386/linux{,64}}.h
+ do
+   cp -uv $file{,.orig}
+-  sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&amp;@g' \
++  sed -e 's@/lib\(64\)\?\(32\)\?\(x32\)\?/ld@/tools&amp;@g' \
+       -e 's@/usr@/tools@g' $file.orig &gt; $file
+   echo '
+ #undef STANDARD_STARTFILE_PREFIX_1
+@@ -83,15 +83,27 @@
+   touch $file.orig
+ done</userinput></screen>
+ 
+-    <para>If building on x86_64, change the default directory name for 64-bit
++    <para arch="default">If building on x86_64, change the default directory name for 64-bit
++    libraries to <quote>lib</quote>:</para>
++    <para arch="multilib">Change the default directory name for 64-bit
+     libraries to <quote>lib</quote>:</para>
+ 
+-<screen><userinput remap="pre">case $(uname -m) in
++<screen arch="default"><userinput remap="pre">case $(uname -m) in
+   x86_64)
+     sed -e '/m64=/s/lib64/lib/' \
+         -i.orig gcc/config/i386/t-linux64
+   ;;
+ esac</userinput></screen>
++<screen arch="multilib"><userinput remap="pre">sed -e '/m64=/s/lib64/lib/' \
++    -i.orig gcc/config/i386/t-linux64
++cat > gcc/config/i386/t-linux64 &lt;&lt;"EOF"
++comma=,
++MULTILIB_OPTIONS    = $(subst $(comma),/,$(TM_MULTILIB_CONFIG))
++MULTILIB_DIRNAMES   = $(patsubst m%, %, $(subst /, ,$(MULTILIB_OPTIONS)))
++MULTILIB_OSDIRNAMES = m64=../lib$(call if_multiarch,:x86_64-linux-gnu)
++MULTILIB_OSDIRNAMES+= m32=../lib32$(call if_multiarch,:i386-linux-gnu)
++MULTILIB_OSDIRNAMES+= mx32=../libx32$(call if_multiarch,:x86_64-linux-gnux32)
++EOF</userinput></screen>
+ 
+     <para>As in the first build of GCC it requires the GMP, MPFR and MPC
+     packages. Unpack the tarballs and move them into the required directory
+@@ -102,7 +114,9 @@
+ tar -xf ../gmp-&gmp-version;.tar.xz
+ mv -v gmp-&gmp-version; gmp
+ tar -xf ../mpc-&mpc-version;.tar.gz
+-mv -v mpc-&mpc-version; mpc</userinput></screen>
++mv -v mpc-&mpc-version; mpc
++tar -xf ../isl-&isl-version;.tar.bz2
++mv -v isl-&isl-version; isl</userinput></screen>
+ <!--
+     <para>As in the first build of GCC, fix a problem identified upstream:</para>
+ 
+@@ -118,7 +132,7 @@
+ 
+     <para>Now prepare GCC for compilation:</para>
+ 
+-<screen><userinput remap="configure">CC=$LFS_TGT-gcc                                    \
++<screen arch="default"><userinput remap="configure">CC=$LFS_TGT-gcc                                    \
+ CXX=$LFS_TGT-g++                                   \
+ AR=$LFS_TGT-ar                                     \
+ RANLIB=$LFS_TGT-ranlib                             \
+@@ -131,6 +145,21 @@
+     --disable-multilib                             \
+     --disable-bootstrap                            \
+     --disable-libgomp</userinput></screen>
++<screen arch="multilib"><userinput remap="configure">CC=$LFS_TGT-gcc                                    \
++CXX=$LFS_TGT-g++                                   \
++AR=$LFS_TGT-ar                                     \
++RANLIB=$LFS_TGT-ranlib                             \
++../configure                                       \
++    --prefix=/tools                                \
++    --with-local-prefix=/tools                     \
++    --with-native-system-header-dir=/tools/include \
++    --enable-languages=c,c++                       \
++    --disable-libstdcxx-pch                        \
++    --enable-multilib                              \
++    --with-multilib-list=m32,m64,mx32              \
++    --with-system-zlib                             \
++    --disable-bootstrap                            \
++    --disable-libgomp</userinput></screen>
+ 
+     <variablelist>
+       <title>The meaning of the new configure options:</title>
+@@ -199,7 +228,25 @@
+ 
+ <screen><computeroutput>[Requesting program interpreter: /tools/lib64/ld-linux-x86-64.so.2]</computeroutput></screen>
+ 
+-    <para>Note that the dynamic linker will be /tools/lib/ld-linux.so.2 
++    <para arch="multilib">Repeat the test for 32-bit:</para>
++
++<screen arch="multilib"><userinput>cc -m32 dummy.c
++readelf -l a.out | grep ': /tools'</userinput></screen>
++
++    <para arch="multilib">In this case, the output shoud be:</para>
++
++<screen arch="multilib"><computeroutput>[Requesting program interpreter: /tools/lib/ld-linux.so.2]</computeroutput></screen>
++
++    <para arch="multilib">Repeat the test for x32-bit:</para>
++
++<screen arch="multilib"><userinput>cc -mx32 dummy.c
++readelf -l a.out | grep ': /tools'</userinput></screen>
++
++    <para arch="multilib">In this case, the output shoud be:</para>
++
++<screen arch="multilib"><computeroutput>[Requesting program interpreter: /tools/lib/ld-linux-x32.so.2]</computeroutput></screen>
++
++    <para arch="default">Note that the dynamic linker will be /tools/lib/ld-linux.so.2 
+     for 32-bit machines.</para>
+ 
+     <para>If the output is not shown as above or there was no output at all,
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter05/glibc.xml BOOK-multilib/chapter05/glibc.xml
+--- BOOK-orig/chapter05/glibc.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter05/glibc.xml	2018-08-12 23:50:30.503472981 +0200
+@@ -51,14 +51,23 @@
+ 
+     <para>Next, prepare Glibc for compilation:</para>
+ 
+-<screen><userinput remap="configure">../configure                             \
++<screen arch="default"><userinput remap="configure">../configure                             \
+       --prefix=/tools                    \
+       --host=$LFS_TGT                    \
+       --build=$(../scripts/config.guess) \
+-      --enable-kernel=&min-kernel;             \
++      --enable-kernel=&min-kernel;                      \
+       --with-headers=/tools/include      \
+       libc_cv_forced_unwind=yes          \
+       libc_cv_c_cleanup=yes</userinput></screen>
++<screen arch="multilib"><userinput remap="configure">../configure                             \
++      --prefix=/tools                    \
++      --host=$LFS_TGT                    \
++      --build=$(../scripts/config.guess) \
++      --enable-kernel=&min-kernel;                      \
++      --with-headers=/tools/include      \
++      --enable-multi-arch                \
++      libc_cv_forced_unwind=yes          \
++      libc_cv_c_cleanup=yes</userinput></screen>
+ 
+     <variablelist>
+       <title>The meaning of the configure options:</title>
+@@ -90,6 +99,13 @@
+         </listitem>
+       </varlistentry>
+ 
++      <varlistentry arch="multilib">
++        <term><parameter>--enable-multi-arch</parameter></term>
++        <listitem>
++          <para>Enables glibc for multiarch environments.<!-- TODO --></para>
++        </listitem>
++      </varlistentry>
++
+       <varlistentry>
+         <term><parameter>libc_cv_forced_unwind=yes</parameter></term>
+         <listitem>
+@@ -182,6 +198,116 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of 32- and x32- Glibc</title>
++
++    <para>Clean the build directory for redoing glibc for 32-bit:</para>
++<screen><userinput>rm -rf *</userinput></screen>
++
++    <para>Rebuild glibc for 32-bit:</para>
++<screen><userinput remap="configure">echo slibdir=/tools/lib32 &gt; configparms
++BUILD_CC="gcc -m32"               \
++CC="${LFS_TGT}-gcc -m32"          \
++CXX="${LFS_TGT}-g++ -m32"         \
++AR="${LFS_TGT}-ar"                \
++RANLIB="${LFS_TGT}-ranlib"        \
++../configure --prefix=/tools                    \
++             --build=$(../scripts/config.guess) \
++             --host=${LFS_TGT32}                \
++             --enable-kernel=&min-kernel;             \
++             --enable-multi-arch                \
++             --libdir=/tools/lib32              \
++             --libexecdir=/tools/lib32          \
++             --with-headers=/tools/include      \
++             --with-binutils=/tools/bin         \
++             libc_cv_forced_unwind=yes          \
++             libc_cv_c_cleanup=yes</userinput></screen>
++
++    <para>Now compile the 32-bit version of glibc:</para>
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install 32-bit version of glibc:</para>
++<screen><userinput remap="install">make install_root="${PWD}/DESTDIR" install
++install -vdm755 /tools/lib32
++cp -Rv DESTDIR/tools/lib32/* /tools/lib32
++install -vm644 DESTDIR/tools/include/gnu/{lib-names,stubs}-32.h \
++               /tools/include/gnu/
++ln -svf /tools/lib32/ld-linux.so.2 /tools/lib/</userinput></screen>
++
++    <para>Clean the build directory for redoing glibc for x32-bit:</para>
++<screen><userinput>rm -rf *</userinput></screen>
++
++    <para>Rebuild glibc for x32-bit:</para>
++<screen><userinput remap="configure">echo slibdir=/tools/libx32 &gt; configparms
++BUILD_CC="gcc -mx32"              \
++CC="${LFS_TGT}-gcc -mx32"         \
++CXX="${LFS_TGT}-g++ -mx32"        \
++AR="${LFS_TGT}-ar"                \
++RANLIB="${LFS_TGT}-ranlib"        \
++../configure --prefix=/tools                    \
++             --build=$(../scripts/config.guess) \
++             --host=${LFS_TGTX32}               \
++             --enable-kernel=&min-kernel;             \
++             --enable-multi-arch                \
++             --libdir=/tools/libx32             \
++             --libexecdir=/tools/libx32         \
++             --with-headers=/tools/include      \
++             --with-binutils=/tools/bin         \
++             libc_cv_forced_unwind=yes          \
++             libc_cv_c_cleanup=yes</userinput></screen>
++
++    <para>Now compile the x32-bit version of glibc:</para>
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install x32-bit version of glibc:</para>
++<screen><userinput remap="install">make install_root="${PWD}/DESTDIR" install
++install -vdm755 /tools/libx32
++cp -Rv DESTDIR/tools/libx32/* /tools/libx32
++install -vm644 DESTDIR/tools/include/gnu/lib-names-x32.h \
++               /tools/include/gnu/
++[ -e DESTDIR/tools/include/gnu/stubs-x32.h ] \
++  &amp;&amp; install -vm644 DESTDIR/tools/include/gnu/stubs-x32.h /tools/include/gnu/ \
++  || ln -v /tools/include/gnu/stubs-64.h /tools/include/gnu/stubs-x32.h
++ln -svf /tools/libx32/ld-linux-x32.so.2 /tools/lib/</userinput></screen>
++<!-- For whatever reason the stubs-x32.h doesn't get created. The 'ln' above is
++just a "brute force" workaraound - by copying the stubs-64.h file. -->
++
++  <caution>
++    <para>At this point, it is imperative to stop and ensure that the basic
++    functions (compiling and linking) of the new toolchain are working as
++    expected. To perform a sanity check, run the following commands:</para>
++
++<screen><userinput>echo 'int main(){}' &gt; dummy.c
++$LFS_TGT-gcc -m32 dummy.c
++readelf -l a.out | grep ': /tools'</userinput></screen>
++
++    <para>If everything is working correctly, there should be no errors,
++    and the output of the last command will be of the form:</para>
++
++<screen><computeroutput>[Requesting program interpreter: /tools/lib/ld-linux.so.2]</computeroutput></screen>
++
++    <para>Redo test for x32-ABI:</para>
++
++<screen><userinput>echo 'int main(){}' &gt; dummy.c
++$LFS_TGT-gcc -mx32 dummy.c
++readelf -l a.out | grep ': /tools'</userinput></screen>
++
++    <para>Output should be like:</para>
++
++<screen><computeroutput>[Requesting program interpreter: /tools/lib/ld-linux-x32.so.2]</computeroutput></screen>
++
++    <para>If the output is not shown as above or there was no output at all,
++    then something is wrong. Investigate and retrace the steps to find out
++    where the problem is and correct it. This issue must be resolved before
++    continuing on.</para>
++
++    <para>Once all is well, clean up the test files:</para>
++
++<screen><userinput>rm -v dummy.c a.out</userinput></screen>
++
++  </caution>
++  </sect2>
++  
+   <sect2 role="content">
+     <title/>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter05/zlib.xml BOOK-multilib/chapter05/zlib.xml
+--- BOOK-orig/chapter05/zlib.xml	1970-01-01 01:00:00.000000000 +0100
++++ BOOK-multilib/chapter05/zlib.xml	2018-08-12 21:42:39.333160634 +0200
+@@ -0,0 +1,95 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++<!DOCTYPE sect1 PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
++  "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
++  <!ENTITY % general-entities SYSTEM "../general.ent">
++  %general-entities;
++]>
++
++<sect1 arch="multilib" id="ch-tools-zlib" role="wrap">
++  <?dbhtml filename="zlib.html"?>
++
++  <sect1info condition="script">
++    <productname>zlib</productname>
++    <productnumber>&zlib-version;</productnumber>
++    <address>&zlib-url;</address>
++  </sect1info>
++
++  <title>Zlib-&zlib-version;</title>
++
++  <indexterm zone="ch-tools-zlib">
++    <primary sortas="a-Zlib">Zlib</primary>
++  </indexterm>
++
++  <sect2 role="package">
++    <title/>
++
++    <para>The Zlib package contains compression and decompression routines used by
++    some programs.</para>
++
++    <segmentedlist>
++      <segtitle>&buildtime;</segtitle>
++      <segtitle>&diskspace;</segtitle>
++
++      <seglistitem>
++        <seg>&zlib-ch6-sbu;</seg>
++        <seg>&zlib-ch6-du;</seg>
++      </seglistitem>
++    </segmentedlist>
++
++  </sect2>
++
++  <sect2 role="installation">
++    <title>Installation of Zlib</title>
++
++    <para>Prepare Zlib for compilation:</para>
++
++<screen><userinput remap="configure">./configure --prefix=/tools</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>To test the results, issue:</para>
++
++<screen><userinput remap="test">make check</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make install</userinput></screen>
++
++  </sect2>
++
++  <sect2 role="installation">
++    <title>Installation of Zlib - 32 bit</title>
++
++    <para>Prepare Zlib for compilation:</para>
++
++<screen><userinput remap="configure">make distclean &amp;&amp;
++CC="${LFS_TGT}-gcc -m32" ./configure --prefix=/tools --libdir=/tools/lib32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>To test the results, issue:</para>
++
++<screen><userinput remap="test">make check</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR_32 install &amp;&amp;
++cp -Rv DESTDIR_32/tools/lib32/* /tools/lib32</userinput></screen>
++
++    <para>Repeat for the x32-ABI:</para>
++    
++<screen><userinput remap="configure">make distclean &amp;&amp;
++CC="${LFS_TGT}-gcc -mx32" ./configure --prefix=/tools --libdir=/tools/libx32</userinput></screen>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR_x32 install &amp;&amp;
++cp -Rv DESTDIR_x32/tools/libx32/* /tools/libx32</userinput></screen>
++
++  </sect2>
++
++</sect1>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/acl.xml BOOK-multilib/chapter06/acl.xml
+--- BOOK-orig/chapter06/acl.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/acl.xml	2018-08-13 10:46:18.390682432 +0200
+@@ -79,6 +79,56 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Acl - 32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Acl for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -m32" ./configure                \
++    --prefix=/usr --libdir=/usr/lib32    \
++    --disable-static --libexecdir=/usr/lib32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$(pwd)/DESTDIR install
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
++  <sect2 role="installation">
++    <title>Installation of Acl - x32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Acl for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -mx32" ./configure                \
++    --prefix=/usr --libdir=/usr/libx32    \
++    --disable-static --libexecdir=/usr/libx32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$(pwd)/DESTDIR install
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-acl" role="content">
+     <title>Contents of Acl</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/attr.xml BOOK-multilib/chapter06/attr.xml
+--- BOOK-orig/chapter06/attr.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/attr.xml	2018-08-13 10:43:05.903130461 +0200
+@@ -78,6 +78,58 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Attr - 32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Attr for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -m32" ./configure \
++    --prefix=/usr         \
++    --disable-static      \
++    --libdir=/usr/lib32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$(pwd)/DESTDIR install
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Attr - x32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Attr for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -mx32" ./configure \
++    --prefix=/usr          \
++    --disable-static       \
++    --libdir=/usr/libx32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$(pwd)/DESTDIR install
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-attr" role="content">
+     <title>Contents of Attr</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/bzip2.xml BOOK-multilib/chapter06/bzip2.xml
+--- BOOK-orig/chapter06/bzip2.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/bzip2.xml	2018-08-14 10:43:58.581316239 +0200
+@@ -97,6 +97,58 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Bzip2 - 32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make clean</userinput></screen>
++
++    <para>Prepare Bzip2 for compilation:</para>
++
++<screen><userinput remap="make">make CC="gcc -m32" BIGFILES="" -f Makefile-libbz2_so
++make clean</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make CC="gcc -m32" \
++     BIGFILES=""</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make PREFIX=$PWD/DESTDIR/usr install
++cp -Rv DESTDIR/usr/lib/* /usr/lib32
++cp -av libbz2.so* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Bzip2 - x32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make clean</userinput></screen>
++
++        <para>Prepare Bzip2 for compilation:</para>
++
++<screen><userinput remap="make">make CC="gcc -mx32" BIGFILES="" -f Makefile-libbz2_so
++make clean</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make CC="gcc -mx32" \
++     BIGFILES=""</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make PREFIX=$PWD/DESTDIR/usr install
++cp -Rv DESTDIR/usr/lib/* /usr/libx32
++cp -av libbz2.so* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-bzip2" role="content">
+     <title>Contents of Bzip2</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/chapter06.xml BOOK-multilib/chapter06/chapter06.xml
+--- BOOK-orig/chapter06/chapter06.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/chapter06.xml	2018-08-13 14:51:35.019746025 +0200
+@@ -21,6 +21,7 @@
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="man-pages.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glibc.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="adjusting.xml"/>
++  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glibc32.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="zlib.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="file.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="readline.xml"/>
+@@ -30,6 +31,7 @@
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="gmp.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="mpfr.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="mpc.xml"/>
++  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="isl.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="gcc.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="bzip2.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pkgconfig.xml"/>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/createfiles.xml BOOK-multilib/chapter06/createfiles.xml
+--- BOOK-orig/chapter06/createfiles.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/createfiles.xml	2018-08-14 08:40:46.611336137 +0200
+@@ -52,7 +52,7 @@
+ <!--sed 's/tools/usr/' /tools/lib/libstdc++.la > /usr/lib/libstdc++.la -->
+ 
+ <!--<screen revision="systemd"><userinput>ln -sv /tools/bin/{bash,cat,dd,echo,ln,pwd,rm,stty} /bin-->
+-<screen><userinput>ln -sv /tools/bin/{bash,cat,dd,echo,ln,pwd,rm,stty} /bin
++<screen arch="default"><userinput>ln -sv /tools/bin/{bash,cat,dd,echo,ln,pwd,rm,stty} /bin
+ ln -sv /tools/bin/{env,install,perl} /usr/bin
+ ln -sv /tools/lib/libgcc_s.so{,.1} /usr/lib
+ ln -sv /tools/lib/libstdc++.{a,so{,.6}} /usr/lib
+@@ -70,9 +70,27 @@
+         > /usr/lib/pkgconfig/${pc}.pc
+ done
+ ln -sv bash /bin/sh</userinput></screen>
++<screen arch="multilib"><userinput>ln -sv /tools/bin/{bash,cat,dd,echo,ln,pwd,rm,stty} /bin
++ln -svf /tools/bin/{env,install,perl} /usr/bin
++for lib in lib{,32,x32}; do
++    ln -svf /tools/$lib/libgcc_s.so{,.1} /usr/$lib
++    ln -svf /tools/$lib/libstdc++.{a,so{,.6}} /usr/$lib
++done
++for lib in lib{,x}32; do ln -svf /usr/$lib /$lib; done
++for lib in blkid lzma mount uuid; do
++    ln -svf /tools/lib/lib$lib.so* /usr/lib
++done
++ln -svf /tools/include/blkid    /usr/include
++ln -svf /tools/include/libmount /usr/include
++ln -svf /tools/include/uuid     /usr/include
++install -vdm755 /usr/lib/pkgconfig
++for pc in blkid mount uuid
++do
++    sed 's@tools@usr@g' /tools/lib/pkgconfig/${pc}.pc \
++        > /usr/lib/pkgconfig/${pc}.pc
++done
++ln -sv bash /bin/sh</userinput></screen>
+ 
+-<!--sed 's/tools/usr/' /tools/lib/libstdc++.la > /usr/lib/libstdc++.la
+-   sed 's/tools/usr/' /tools/lib/lib${lib}.la > /usr/lib/lib${lib}.la-->
+   <variablelist>
+     <title>The purpose of each link:</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/creatingdirs.xml BOOK-multilib/chapter06/creatingdirs.xml
+--- BOOK-orig/chapter06/creatingdirs.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/creatingdirs.xml	2018-08-13 19:05:23.491487233 +0200
+@@ -13,7 +13,7 @@
+   <para>It is time to create some structure in the LFS file system. Create a
+   standard directory tree by issuing the following commands:</para>
+ 
+-<screen><userinput>mkdir -pv /{bin,boot,etc/{opt,sysconfig},home,lib/firmware,mnt,opt}
++<screen arch="default"><userinput>mkdir -pv /{bin,boot,etc/{opt,sysconfig},home,lib/firmware,mnt,opt}
+ mkdir -pv /{media/{floppy,cdrom},sbin,srv,var}
+ install -dv -m 0750 /root
+ install -dv -m 1777 /tmp /var/tmp
+@@ -31,6 +31,21 @@
+ ln -sv /run /var/run
+ ln -sv /run/lock /var/lock
+ mkdir -pv /var/{opt,cache,lib/{color,misc,locate},local}</userinput></screen>
++<screen arch="multilib"><userinput>mkdir -pv /{bin,boot,etc/{opt,sysconfig},home,lib/firmware,mnt,opt}
++mkdir -pv /{media/{floppy,cdrom},sbin,srv,var}
++install -dv -m 0750 /root
++install -dv -m 1777 /tmp /var/tmp
++mkdir -pv /usr/{,local/}{bin,include,lib,sbin,src}
++mkdir -pv /usr/{,local/}share/{color,dict,doc,info,locale,man}
++mkdir -v  /usr/{,local/}share/{misc,terminfo,zoneinfo}
++mkdir -v  /usr/libexec
++mkdir -pv /usr/{,local/}share/man/man{1..8}
++mkdir -v /lib64
++mkdir -v /var/{log,mail,spool}
++ln -sv /run /var/run
++ln -sv /run/lock /var/lock
++mkdir -pv /var/{opt,cache,lib/{color,misc,locate},local}
++mkdir -pv /usr/lib{,x}32</userinput></screen>
+ 
+   <para>Directories are, by default, created with permission mode 755, but
+   this is not desirable for all directories. In the commands above, two
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/file.xml BOOK-multilib/chapter06/file.xml
+--- BOOK-orig/chapter06/file.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/file.xml	2018-08-13 10:30:32.238145750 +0200
+@@ -59,6 +59,53 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of File - 32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare File for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -m32" ./configure \
++    --prefix=/usr --libdir=/usr/lib32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of File - x32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare File for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -mx32" ./configure \
++    --prefix=/usr --libdir=/usr/libx32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
+ 
+   <sect2 id="contents-file" role="content">
+     <title>Contents of File</title>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/gcc.xml BOOK-multilib/chapter06/gcc.xml
+--- BOOK-orig/chapter06/gcc.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/gcc.xml	2018-08-13 08:21:10.763459368 +0200
+@@ -41,15 +41,27 @@
+   <sect2 role="installation">
+     <title>Installation of GCC</title>
+ 
+-    <para>If building on x86_64, change the default directory name for 64-bit
++    <para arch="default">If building on x86_64, change the default directory name for 64-bit
++    libraries to <quote>lib</quote>:</para>
++    <para arch="multilib">Change the default directory name for 64-bit
+     libraries to <quote>lib</quote>:</para>
+ 
+-<screen><userinput remap="pre">case $(uname -m) in
++<screen arch="default"><userinput remap="pre">case $(uname -m) in
+   x86_64)
+     sed -e '/m64=/s/lib64/lib/' \
+         -i.orig gcc/config/i386/t-linux64
+   ;;
+ esac</userinput></screen>
++<screen arch="multilib"><userinput remap="pre">sed -e '/m64=/s/lib64/lib/' \
++    -i.orig gcc/config/i386/t-linux64
++cat &gt; gcc/config/i386/t-linux64 &lt;&lt;"EOF"
++comma=,
++MULTILIB_OPTIONS    = $(subst $(comma),/,$(TM_MULTILIB_CONFIG))
++MULTILIB_DIRNAMES   = $(patsubst m%, %, $(subst /, ,$(MULTILIB_OPTIONS)))
++MULTILIB_OSDIRNAMES = m64=../lib$(call if_multiarch,:x86_64-linux-gnu)
++MULTILIB_OSDIRNAMES+= m32=../lib32$(call if_multiarch,:i386-linux-gnu)
++MULTILIB_OSDIRNAMES+= mx32=../libx32$(call if_multiarch,:x86_64-linux-gnux32)
++EOF</userinput></screen>
+ 
+     <para>Remove the symlink created earlier as the final gcc includes will be
+     installed here:</para>
+@@ -63,12 +75,19 @@
+ 
+     <para>Prepare GCC for compilation:</para>
+ 
+-<screen><userinput remap="configure">SED=sed                               \
++<screen arch="default"><userinput remap="configure">SED=sed                               \
+ ../configure --prefix=/usr            \
+              --enable-languages=c,c++ \
+              --disable-multilib       \
+              --disable-bootstrap      \
+              --with-system-zlib</userinput></screen>
++<screen arch="multilib"><userinput remap="configure">SED=sed \
++../configure --prefix=/usr                     \
++             --enable-languages=c,c++          \
++             --enable-multilib                 \
++             --with-multilib-list=m32,m64,mx32 \
++             --disable-bootstrap               \
++             --with-system-zlib</userinput></screen>
+ 
+     <para>Note that for other languages, there are some prerequisites that
+     are not yet available. See the
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/glibc32.xml BOOK-multilib/chapter06/glibc32.xml
+--- BOOK-orig/chapter06/glibc32.xml	1970-01-01 01:00:00.000000000 +0100
++++ BOOK-multilib/chapter06/glibc32.xml	2018-08-14 08:17:14.662467510 +0200
+@@ -0,0 +1,166 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++<!DOCTYPE sect1 PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
++  "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
++  <!ENTITY % general-entities SYSTEM "../general.ent">
++  %general-entities;
++]>
++
++<sect1 arch="multilib" id="ch-system-glibc32" role="wrap">
++  <?dbhtml filename="glibc32.html"?>
++
++  <sect1info condition="script">
++    <productname>glibc32</productname>
++    <productnumber>&glibc-version;</productnumber>
++    <address>&glibc-url;</address>
++  </sect1info>
++
++  <title>Glibc-&glibc-version; - 32-bit</title>
++
++  <indexterm zone="ch-system-glibc32">
++    <primary sortas="a-Glibc32">Glibc32</primary>
++  </indexterm>
++<!--
++  <sect2 role="package">
++    <title/>
++
++    <para>The Glibc package contains the main C library. This library provides
++    the basic routines for allocating memory, searching directories, opening and
++    closing files, reading and writing files, string handling, pattern matching,
++    arithmetic, and so on.</para>
++
++    <segmentedlist>
++      <segtitle>&buildtime;</segtitle>
++      <segtitle>&diskspace;</segtitle>
++
++      <seglistitem>
++        <seg>&glibc-ch6-sbu;</seg>
++        <seg>&glibc-ch6-du;</seg>
++      </seglistitem>
++    </segmentedlist>
++
++  </sect2>
++-->
++  <sect2 role="installation">
++    <title>Installation of Glibc - Multilib</title>
++
++<screen><userinput remap="pre">patch -Np1 -i ../&glibc-fhs-patch;</userinput></screen>
++
++    <para>Determine the GCC include directory and create a symlink for LSB
++    compliance. Create a compatibility symlink
++    required for the dynamic loader to function correctly:</para>
++
++<screen><userinput remap="pre">GCC_INCDIR=/usr/lib/gcc/x86_64-pc-linux-gnu/&gcc-version;/include
++<!--ln -sfv ../lib/ld-linux-x86-64.so.2 /lib64
++ln -sfv ../lib/ld-linux-x86-64.so.2 /lib64/ld-lsb-x86-64.so.3--></userinput></screen>
++
++    <para>Remove a file that may be left over from a previous build attempt:</para>
++
++<screen><userinput remap="pre">mv /usr/include/limits.h{,.backup} </userinput></screen>
++
++    <sect3>
++      <title>Glibc - 32-bit</title>
++
++    <para>The Glibc documentation recommends building Glibc 
++    in a dedicated build directory:</para>
++
++<screen><userinput remap="pre">mkdir -v build
++cd       build</userinput></screen>
++
++    <para>Prepare Glibc for compilation:</para>
++
++<screen><userinput remap="configure">GCC_INCDIR=/usr/lib/gcc/x86_64-pc-linux-gnu/&gcc-version;/include
++CC="gcc -m32 -isystem $GCC_INCDIR -isystem /usr/include" \
++CXX="g++ -m32 -isystem $GCC_INCDIR -isystem /usr/include" \
++../configure --prefix=/usr                          \
++             --disable-werror                       \
++             --enable-kernel=&min-kernel;                    \
++             --enable-stack-protector=strong        \
++             --enable-multi-arch                    \
++             --libdir=/usr/lib32                    \
++             libc_cv_slibdir=/usr/lib32             \
++             i686-pc-linux-gnu
++unset GCC_INCDIR</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
++make install_root=$PWD/DESTDIR install
++mv -v DESTDIR/usr/lib32/* /usr/lib32/
++install -vm644 DESTDIR/usr/include/gnu/{lib-names,stubs}-32.h \
++               /usr/include/gnu/
++ln -svf ../usr/lib32/ld-linux.so.2 /lib/ld-linux.so.2
++ln -svf ../usr/lib32/ld-linux.so.2 /lib/ld-lsb.so.3
++ln -svf ../lib/locale /usr/lib32/locale</userinput></screen>
++
++    <para>Do cleanup:</para>
++
++<screen><userinput>cd ..
++rm -rf build</userinput></screen>
++
++    </sect3>
++
++    <sect3>
++      <title>Glibc - x32-bit</title>
++
++    <para>The Glibc documentation recommends building Glibc 
++    in a dedicated build directory:</para>
++
++<screen><userinput remap="pre">mkdir -v build
++cd       build</userinput></screen>
++
++      <para>Prepare Glibc for compilation:</para>
++
++<screen><userinput remap="configure">GCC_INCDIR=/usr/lib/gcc/x86_64-pc-linux-gnu/&gcc-version;/include
++CC="gcc -mx32 -isystem $GCC_INCDIR -isystem /usr/include" \
++CXX="g++ -mx32 -isystem $GCC_INCDIR -isystem /usr/include" \
++../configure --prefix=/usr                          \
++             --disable-werror                       \
++             --enable-kernel=&min-kernel;                    \
++             --enable-stack-protector=strong        \
++             --enable-multi-arch                    \
++             --libdir=/usr/libx32                   \
++             libc_cv_slibdir=/usr/libx32            \
++             x86_64-pc-linux-gnux32
++unset GCC_INCDIR</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
++make install_root=$PWD/DESTDIR install
++mv -v DESTDIR/usr/libx32/* /usr/libx32/
++install -vm644 DESTDIR/usr/include/gnu/lib-names-x32.h /usr/include/gnu/
++[ -e DESTDIR/usr/include/gnu/stubs-x32.h ] \
++  &amp;&amp; install -vm644 DESTDIR/usr/include/gnu/stubs-x32.h /usr/include/gnu/ \
++  || ln -v /usr/include/gnu/stubs-64.h /usr/include/gnu/stubs-x32.h
++ln -svf ../usr/libx32/ld-linux-x32.so.2 /lib/ld-linux-x32.so.2
++ln -svf ../lib/locale /usr/libx32/locale</userinput></screen>
++<!-- For whatever reason the stubs-x32.h doesn't get created. The 'ln' above is
++just a "brute force" workaraound by copying the stubs-64.h file. -->
++
++    <para>Do cleanup:</para>
++
++<screen><userinput>cd ..
++rm -rf build</userinput></screen>
++
++    </sect3>
++
++    <sect3>
++        <title/>
++        
++    <para>Restore the file we moved temporarily away:</para>
++
++<screen><userinput remap="pre">mv /usr/include/limits.h{.backup,} </userinput></screen>
++
++    </sect3>
++    
++  </sect2>
++
++</sect1>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/glibc.xml BOOK-multilib/chapter06/glibc.xml
+--- BOOK-orig/chapter06/glibc.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/glibc.xml	2018-08-14 08:34:23.491104331 +0200
+@@ -66,11 +66,11 @@
+ 
+ <screen><userinput remap="pre">ln -sfv /tools/lib/gcc /usr/lib</userinput></screen>
+ 
+-    <para>Determine the GCC include directory and create a symlink for LSB
++    <para arch="default">Determine the GCC include directory and create a symlink for LSB
+     compliance. Additionally, for x86_64, create a compatibility symlink
+     required for the dynamic loader to function correctly:</para>
+ 
+-<screen><userinput remap="pre">case $(uname -m) in
++<screen arch="default"><userinput remap="pre">case $(uname -m) in
+     i?86)    GCC_INCDIR=/usr/lib/gcc/$(uname -m)-pc-linux-gnu/&gcc-version;/include
+             ln -sfv ld-linux.so.2 /lib/ld-lsb.so.3
+     ;;
+@@ -80,6 +80,15 @@
+     ;;
+ esac</userinput></screen>
+ 
++    <para arch="multilib">Determine the GCC include directory and create a symlink for LSB
++    compliance. Additionally create a compatibility symlink
++    required for the dynamic loader to function correctly:</para>
++
++<screen arch="multilib"><userinput remap="pre">GCC_INCDIR=/usr/lib/gcc/x86_64-pc-linux-gnu/&gcc-version;/include
++ln -sfv ../lib/ld-linux-x86-64.so.2 /lib64
++ln -sfv ../lib/ld-linux-x86-64.so.2 /lib64/ld-lsb-x86-64.so.3
++</userinput></screen>
++
+     <para>Remove a file that may be left over from a previous build attempt:
+     </para>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/isl.xml BOOK-multilib/chapter06/isl.xml
+--- BOOK-orig/chapter06/isl.xml	1970-01-01 01:00:00.000000000 +0100
++++ BOOK-multilib/chapter06/isl.xml	2018-08-13 08:26:11.546619212 +0200
+@@ -0,0 +1,107 @@
++<?xml version="1.0" encoding="ISO-8859-1"?>
++<!DOCTYPE sect1 PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
++  "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
++  <!ENTITY % general-entities SYSTEM "../general.ent">
++  %general-entities;
++]>
++
++<sect1 id="ch-system-isl" role="wrap">
++  <?dbhtml filename="isl.html"?>
++
++  <sect1info condition="script">
++    <productname>isl</productname>
++    <productnumber>&isl-version;</productnumber>
++    <address>&isl-url;</address>
++  </sect1info>
++
++  <title>ISL-&isl-version;</title>
++
++  <indexterm zone="ch-system-isl">
++    <primary sortas="a-ISL">ISL</primary>
++  </indexterm>
++
++  <sect2 role="package">
++    <title/>
++
++    <para>ISL is a thread-safe C library for manipulating sets and relations
++    of integer points bounded by affine constraints.</para>
++
++    <segmentedlist>
++      <segtitle>&buildtime;</segtitle>
++      <segtitle>&diskspace;</segtitle>
++
++      <seglistitem>
++        <seg>&isl-ch6-sbu;</seg>
++        <seg>&isl-ch6-du;</seg>
++      </seglistitem>
++    </segmentedlist>
++
++  </sect2>
++
++  <sect2 role="installation">
++    <title>Installation of ISL</title>
++
++    <para>Prepare ISL for compilation:</para>
++
++<screen><userinput remap="configure">./configure --prefix=/usr    \
++            --disable-static \
++            --docdir=/usr/share/doc/isl-&isl-version;</userinput></screen>
++
++    <variablelist>
++      <title>The meaning of the new configure options:</title>
++
++      <varlistentry>
++        <term><parameter>--docdir=/usr/share/doc/isl-&isl-version;</parameter></term>
++        <listitem>
++          <para>This variable specifies the correct place for the
++          documentation.</para>
++        </listitem>
++      </varlistentry>
++
++    </variablelist>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package and its documentation:</para>
++
++<screen><userinput remap="install">make install
++install -vd /usr/share/doc/isl-&isl-version;
++install -m644 doc/{CodingStyle,manual.pdf,SubmittingPatches,user.pod} \
++        /usr/share/doc/isl-&isl-version;</userinput></screen>
++
++  </sect2>
++
++  <sect2 id="contents-isl" role="content">
++    <title>Contents of ISL</title>
++
++    <segmentedlist>
++      <segtitle>Installed Libraries</segtitle>
++      <segtitle>Installed directory</segtitle>
++
++      <seglistitem>
++        <seg>libisl.so</seg>
++        <seg>/usr/share/doc/isl-&isl-version;</seg>
++      </seglistitem>
++    </segmentedlist>
++
++    <variablelist>
++      <bridgehead renderas="sect3">Short Descriptions</bridgehead>
++      <?dbfo list-presentation="list"?>
++      <?dbhtml list-presentation="table"?>
++
++      <varlistentry id="libisl">
++        <term><filename class="libraryfile">libisl</filename></term>
++        <listitem>
++          <para>Contains integer set manipulation functions</para>
++          <indexterm zone="ch-system-isl libisl">
++            <primary sortas="c-libisl">libisl</primary>
++          </indexterm>
++        </listitem>
++      </varlistentry>
++    </variablelist>
++
++  </sect2>
++
++</sect1>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/kmod.xml BOOK-multilib/chapter06/kmod.xml
+--- BOOK-orig/chapter06/kmod.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/kmod.xml	2018-08-14 11:57:10.216924550 +0200
+@@ -97,6 +97,69 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Kmod - 32-bit</title>
++
++    <para>Clean previous build but keep man pages as they cannot be recreated
++    since xsltproc isn't installed yet:</para>
++
++<screen><userinput>sed -e "s/^CLEANFILES =.*/CLEANFILES =/" -i man/Makefile
++make clean</userinput></screen>
++
++    <para>Prepare Kmod for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -m32" ./configure \
++    --prefix=/usr         \
++    --bindir=/bin         \
++    --libdir=/usr/lib32   \
++    --sysconfdir=/etc     \
++    --with-xz             \
++    --with-zlib           \
++    --with-rootlibdir=/usr/lib32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
++<sect2 arch="multilib" role="installation">
++    <title>Installation of Kmod - x32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>sed -e "s/^CLEANFILES =.*/CLEANFILES =/" -i man/Makefile
++make clean</userinput></screen>
++
++    <para>Prepare Kmod for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -mx32" ./configure \
++    --prefix=/usr          \
++    --bindir=/bin          \
++    --libdir=/usr/libx32   \
++    --sysconfdir=/etc      \
++    --with-xz              \
++    --with-zlib            \
++    --with-rootlibdir=/usr/libx32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-kmod" role="content">
+     <title>Contents of Kmod</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/libcap.xml BOOK-multilib/chapter06/libcap.xml
+--- BOOK-orig/chapter06/libcap.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/libcap.xml	2018-08-13 10:49:11.889166262 +0200
+@@ -92,6 +92,44 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Libcap - 32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make CC="gcc -m32"</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make lib=lib32 prefix=$PWD/DESTDIR/usr -C libcap install
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Libcap - x32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make CC="gcc -mx32"</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make lib=libx32 prefix=$PWD/DESTDIR/usr -C libcap install
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-libcap" role="content">
+     <title>Contents of Libcap</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/ncurses.xml BOOK-multilib/chapter06/ncurses.xml
+--- BOOK-orig/chapter06/ncurses.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/ncurses.xml	2018-08-14 11:33:10.458969848 +0200
+@@ -161,6 +161,112 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Ncurses - 32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++        <para>Prepare Ncurses for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -m32" CXX="g++ -m32"  \
++    ./configure --prefix=/usr \
++    --libdir=/usr/lib32       \
++    --mandir=/usr/share/man   \
++    --with-shared             \
++    --without-debug           \
++    --without-normal          \
++    --enable-pc-files         \
++    --enable-widec            \
++    --with-pkg-config-libdir=/usr/lib32/pkgconfig</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make -j1</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++for lib in ncurses form panel menu ; do
++    rm -vf                    DESTDIR/usr/lib32/lib${lib}.so
++    echo "INPUT(-l${lib}w)" > DESTDIR/usr/lib32/lib${lib}.so
++    ln -svf ${lib}w.pc        DESTDIR/usr/lib32/pkgconfig/$lib.pc
++done
++rm -vf                     DESTDIR/usr/lib32/libcursesw.so
++echo "INPUT(-lncursesw)" > DESTDIR/usr/lib32/libcursesw.so
++ln -sfv libncurses.so      DESTDIR/usr/lib32/libcurses.so
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++    <para>If desired, make the version 5 libraries in 32bit as well:</para>
++
++<screen><userinput remap="install">make distclean
++CC="gcc -m32" CXX="g++ -m32"  \
++    ./configure --prefix=/usr \
++    --with-shared             \
++    --without-normal          \
++    --without-debug           \
++    --without-cxx-binding     \
++    --with-abi-version=5
++make -j1 sources libs
++cp -av lib/lib*.so.5* /usr/lib32</userinput></screen>
++
++  </sect2>
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Ncurses - x32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++        <para>Prepare Ncurses for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -mx32" CXX="g++ -mx32"  \
++    ./configure --prefix=/usr \
++    --libdir=/usr/libx32      \
++    --mandir=/usr/share/man   \
++    --with-shared             \
++    --without-debug           \
++    --without-normal          \
++    --enable-pc-files         \
++    --enable-widec            \
++    --with-pkg-config-libdir=/usr/libx32/pkgconfig</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make -j1</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++for lib in ncurses form panel menu ; do
++    rm -vf                    DESTDIR/usr/libx32/lib${lib}.so
++    echo "INPUT(-l${lib}w)" > DESTDIR/usr/libx32/lib${lib}.so
++    ln -svf ${lib}w.pc        DESTDIR/usr/libx32/pkgconfig/$lib.pc
++done
++rm -vf                     DESTDIR/usr/libx32/libcursesw.so
++echo "INPUT(-lncursesw)" > DESTDIR/usr/libx32/libcursesw.so
++ln -sfv libncurses.so      DESTDIR/usr/libx32/libcurses.so
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++    <para>If desired, make the version 5 libraries in x32bit as well:</para>
++
++<screen><userinput remap="install">make distclean
++CC="gcc -mx32" CXX="g++ -mx32"  \
++    ./configure --prefix=/usr \
++    --with-shared             \
++    --without-normal          \
++    --without-debug           \
++    --without-cxx-binding     \
++    --with-abi-version=5
++make -j1 sources libs
++cp -av lib/lib*.so.5* /usr/libx32</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-ncurses" role="content">
+     <title>Contents of Ncurses</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/systemd.xml BOOK-multilib/chapter06/systemd.xml
+--- BOOK-orig/chapter06/systemd.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/systemd.xml	2018-08-13 11:32:09.403650959 +0200
+@@ -212,6 +212,122 @@
+ 
+   </sect2>
+ 
++<!-- ====== 32-bit ===== -->
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of systemd - 32-bit</title>
++
++    <para>If still in the build directory, step out:</para>
++<screen><userinput>cd ..</userinput></screen>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make clean
++rm -rf build</userinput></screen>
++
++    <para>Create a symlink to work around missing xsltproc:</para>
++
++<screen><userinput remap="pre">ln -sf /tools/bin/true /usr/bin/xsltproc</userinput></screen>
++
++    <para>Prepare systemd for compilation:</para>
++
++    <screen><userinput remap="configure">mkdir -p build
++cd       build
++
++CC="gcc -m32"                      \
++LANG=en_US.UTF-8                   \
++meson --prefix=/usr                \
++      --sysconfdir=/etc            \
++      --localstatedir=/var         \
++      -Dblkid=true                 \
++      -Dbuildtype=release          \
++      -Ddefault-dnssec=no          \
++      -Dfirstboot=false            \
++      -Dinstall-tests=false        \
++      -Dkill-path=/bin/kill        \
++      -Dkmod-path=/bin/kmod        \
++      -Dldconfig=false             \
++      -Dmount-path=/bin/mount      \
++      -Drootprefix=                \
++      -Drootlibdir=/usr/lib32      \
++      -Dsplit-usr=true             \
++      -Dsulogin-path=/sbin/sulogin \
++      -Dsysusers=false             \
++      -Dumount-path=/bin/umount    \
++      -Db_lto=false                \
++      ..</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">LANG=en_US.UTF-8 ninja</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">LANG=en_US.UTF-8 DESTDIR=$PWD/DESTDIR ninja install
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR
++rm -f /usr/bin/xsltproc</userinput></screen>
++
++  </sect2>
++
++<!-- ====== x32-bit ===== -->
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of systemd - x32-bit</title>
++
++    <para>If still in the build directory, step out:</para>
++<screen><userinput>cd ..</userinput></screen>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make clean
++rm -rf build</userinput></screen>
++
++    <para>Create a symlink to work around missing xsltproc:</para>
++
++<screen><userinput remap="pre">ln -sf /tools/bin/true /usr/bin/xsltproc</userinput></screen>
++
++    <para>Prepare systemd for compilation:</para>
++
++    <screen><userinput remap="configure">mkdir -p build
++cd       build
++
++CC="gcc -mx32"                     \
++LANG=en_US.UTF-8                   \
++meson --prefix=/usr                \
++      --sysconfdir=/etc            \
++      --localstatedir=/var         \
++      -Dblkid=true                 \
++      -Dbuildtype=release          \
++      -Ddefault-dnssec=no          \
++      -Dfirstboot=false            \
++      -Dinstall-tests=false        \
++      -Dkill-path=/bin/kill        \
++      -Dkmod-path=/bin/kmod        \
++      -Dldconfig=false             \
++      -Dmount-path=/bin/mount      \
++      -Drootprefix=                \
++      -Drootlibdir=/usr/libx32     \
++      -Dsplit-usr=true             \
++      -Dsulogin-path=/sbin/sulogin \
++      -Dsysusers=false             \
++      -Dumount-path=/bin/umount    \
++      -Db_lto=false                \
++      ..</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">LANG=en_US.UTF-8 ninja</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">LANG=en_US.UTF-8 DESTDIR=$PWD/DESTDIR ninja install
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR
++rm -f /usr/bin/xsltproc</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-systemd" role="content">
+     <title>Contents of systemd</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/util-linux.xml BOOK-multilib/chapter06/util-linux.xml
+--- BOOK-orig/chapter06/util-linux.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/util-linux.xml	2018-08-13 11:14:23.650964927 +0200
+@@ -52,6 +52,8 @@
+ 
+   </sect2>
+ 
++<!-- ~~~~~~~~~~~~~~~~~~~~~ default ABI ~~~~~~~~~~~~~~~~~~~~~ -->
++
+   <sect2 role="installation">
+     <title>Installation of Util-linux</title>
+ <!--
+@@ -121,6 +123,116 @@
+ 
+   </sect2>
+ 
++<!-- ~~~~~~~~~~~~~~~~~~~~~ ABI 32-bit ~~~~~~~~~~~~~~~~~~~~~ -->
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Util-linux - 32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Util-linux for compilation:</para>
++
++<screen revision="sysv"><userinput remap="configure">CC="gcc -m32" \
++./configure ADJTIME_PATH=/var/lib/hwclock/adjtime   \
++            --docdir=/usr/share/doc/util-linux-&util-linux-version; \
++            --disable-chfn-chsh  \
++            --disable-login      \
++            --disable-nologin    \
++            --disable-su         \
++            --disable-setpriv    \
++            --disable-runuser    \
++            --disable-pylibmount \
++            --disable-static     \
++            --without-python     \
++            --without-systemd    \
++            --without-systemdsystemunitdir \
++            --libdir=/usr/lib32  \
++            --enable-libmount-force-mountinfo</userinput></screen>
++
++<screen revision="systemd"><userinput remap="configure">CC="gcc -m32" \
++./configure ADJTIME_PATH=/var/lib/hwclock/adjtime   \
++            --docdir=/usr/share/doc/util-linux-&util-linux-version; \
++            --disable-chfn-chsh  \
++            --disable-login      \
++            --disable-nologin    \
++            --disable-su         \
++            --disable-setpriv    \
++            --disable-runuser    \
++            --disable-pylibmount \
++            --disable-static     \
++            --without-python     \
++            --libdir=/usr/lib32  \
++            --enable-libmount-force-mountinfo</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
++<!-- ~~~~~~~~~~~~~~~~~~~~~ ABI x32-bit ~~~~~~~~~~~~~~~~~~~~~ -->
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Util-linux - x32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Util-linux for compilation:</para>
++
++<screen revision="sysv"><userinput remap="configure">CC="gcc -mx32" \
++./configure ADJTIME_PATH=/var/lib/hwclock/adjtime   \
++            --docdir=/usr/share/doc/util-linux-&util-linux-version; \
++            --disable-chfn-chsh  \
++            --disable-login      \
++            --disable-nologin    \
++            --disable-su         \
++            --disable-setpriv    \
++            --disable-runuser    \
++            --disable-pylibmount \
++            --disable-static     \
++            --without-python     \
++            --without-systemd    \
++            --without-systemdsystemunitdir \
++            --libdir=/usr/libx32  \
++            --enable-libmount-force-mountinfo</userinput></screen>
++
++<screen revision="systemd"><userinput remap="configure">CC="gcc -mx32" \
++./configure ADJTIME_PATH=/var/lib/hwclock/adjtime   \
++            --docdir=/usr/share/doc/util-linux-&util-linux-version; \
++            --disable-chfn-chsh  \
++            --disable-login      \
++            --disable-nologin    \
++            --disable-su         \
++            --disable-setpriv    \
++            --disable-runuser    \
++            --disable-pylibmount \
++            --disable-static     \
++            --without-python     \
++            --libdir=/usr/libx32 \
++            --enable-libmount-force-mountinfo</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-utillinux" role="content">
+     <title>Contents of Util-linux</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/xz.xml BOOK-multilib/chapter06/xz.xml
+--- BOOK-orig/chapter06/xz.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/xz.xml	2018-08-13 10:58:13.140597840 +0200
+@@ -68,6 +68,58 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Xz - 32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Xz for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -m32" ./configure \
++    --prefix=/usr \
++    --disable-static \
++    --libdir=/usr/lib32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Xz - x32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Xz for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -mx32" ./configure \
++    --prefix=/usr \
++    --disable-static \
++    --libdir=/usr/libx32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-xz" role="content">
+     <title>Contents of Xz</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter06/zlib.xml BOOK-multilib/chapter06/zlib.xml
+--- BOOK-orig/chapter06/zlib.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter06/zlib.xml	2018-08-14 12:02:35.272959270 +0200
+@@ -67,6 +67,52 @@
+ 
+   </sect2>
+ 
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Zlib - 32-bit</title>
++
++    <para>Clean previous build:</para>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Zlib for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -m32" ./configure \
++    --prefix=/usr --libdir=/usr/lib32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/lib32/* /usr/lib32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
++  <sect2 arch="multilib" role="installation">
++    <title>Installation of Zlib - x32-bit</title>
++
++<screen><userinput>make distclean</userinput></screen>
++
++    <para>Prepare Zlib for compilation:</para>
++
++<screen><userinput remap="configure">CC="gcc -mx32" ./configure \
++    --prefix=/usr --libdir=/usr/libx32</userinput></screen>
++
++    <para>Compile the package:</para>
++
++<screen><userinput remap="make">make</userinput></screen>
++
++    <para>Install the package:</para>
++
++<screen><userinput remap="install">make DESTDIR=$PWD/DESTDIR install
++cp -Rv DESTDIR/usr/libx32/* /usr/libx32
++rm -rf DESTDIR</userinput></screen>
++
++  </sect2>
++
+   <sect2 id="contents-zlib" role="content">
+     <title>Contents of Zlib</title>
+ 
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter08/grub.xml BOOK-multilib/chapter08/grub.xml
+--- BOOK-orig/chapter08/grub.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter08/grub.xml	2018-08-12 21:34:19.210144555 +0200
+@@ -131,7 +131,7 @@
+ 
+     <para>Generate <filename>/boot/grub/grub.cfg</filename>:</para>
+ 
+-    <screen revision="sysv"><userinput>cat &gt; /boot/grub/grub.cfg &lt;&lt; "EOF"
++    <screen arch="default" revision="sysv"><userinput>cat &gt; /boot/grub/grub.cfg &lt;&lt; "EOF"
+ <literal># Begin /boot/grub/grub.cfg
+ set default=0
+ set timeout=5
+@@ -143,6 +143,18 @@
+         linux   /boot/vmlinuz-&linux-version;-lfs-&version; root=/dev/sda2 ro
+ }</literal>
+ EOF</userinput></screen>
++    <screen arch="multilib" revision="sysv"><userinput>cat &gt; /boot/grub/grub.cfg &lt;&lt; "EOF"
++<literal># Begin /boot/grub/grub.cfg
++set default=0
++set timeout=5
++
++insmod ext2
++set root=(hd0,2)
++
++menuentry "GNU/Linux, Linux &linux-version;-lfs-&version;-multilib" {
++        linux   /boot/vmlinuz-&linux-version;-lfs-&version;-multilib root=/dev/sda2 ro
++}</literal>
++EOF</userinput></screen>
+ 
+     <screen revision="systemd"><userinput>cat &gt; /boot/grub/grub.cfg &lt;&lt; "EOF"
+ <literal># Begin /boot/grub/grub.cfg
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter08/kernel.xml BOOK-multilib/chapter08/kernel.xml
+--- BOOK-orig/chapter08/kernel.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter08/kernel.xml	2018-08-12 21:22:22.272990723 +0200
+@@ -235,7 +235,8 @@
+     the automatic setup of the boot process described in the next section.  The
+     following command assumes an x86 architecture:</para>
+ 
+-<screen revision="sysv"><userinput remap="install">cp -iv arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&version;</userinput></screen>
++<screen arch="default" revision="sysv"><userinput remap="install">cp -iv arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&version;</userinput></screen>
++<screen arch="multilib" revision="sysv"><userinput remap="install">cp -iv arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&version;-multilib</userinput></screen>
+ 
+ <screen revision="systemd"><userinput remap="install">cp -iv arch/x86/boot/bzImage /boot/vmlinuz-&linux-version;-lfs-&versiond;</userinput></screen>
+ 
+@@ -346,7 +347,8 @@
+ 
+       <seglistitem>
+         <seg>config-&linux-version;,
+-        <phrase revision="sysv">vmlinuz-&linux-version;-lfs-&version;,</phrase>
++        <phrase arch="default" revision="sysv">vmlinuz-&linux-version;-lfs-&version;,</phrase>
++        <phrase arch="multilib" revision="sysv">vmlinuz-&linux-version;-lfs-&version;-multilib,</phrase>
+         <phrase revision="systemd">vmlinuz-&linux-version;-lfs-&versiond;,</phrase>
+         and System.map-&linux-version;</seg>
+         <seg>/lib/modules, /usr/share/doc/linux-&linux-version;</seg>
+@@ -369,7 +371,8 @@
+       </varlistentry>
+ 
+       <varlistentry id="lfskernel">
+-        <term revision="sysv"><filename>vmlinuz-&linux-version;-lfs-&version;</filename></term>
++        <term arch="default" revision="sysv"><filename>vmlinuz-&linux-version;-lfs-&version;</filename></term>
++        <term arch="multilib" revision="sysv"><filename>vmlinuz-&linux-version;-lfs-&version;-multilib</filename></term>
+         <term revision="systemd"><filename>vmlinuz-&linux-version;-lfs-&versiond;</filename></term>
+         <listitem>
+           <para>The engine of the Linux system. When turning on the computer,
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter09/reboot.xml BOOK-multilib/chapter09/reboot.xml
+--- BOOK-orig/chapter09/reboot.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter09/reboot.xml	2018-08-12 21:31:50.892388121 +0200
+@@ -106,7 +106,10 @@
+ <screen role="nodump"><userinput>shutdown -r now</userinput></screen>
+ 
+   <para>Assuming the GRUB boot loader was set up as outlined earlier, the menu
+-  is set to boot <emphasis>LFS &version;</emphasis> automatically.</para>
++  is set to boot
++    <emphasis arch="default">LFS &version;</emphasis>
++    <emphasis arch="multilib">LFS &version;-multilib</emphasis>
++  automatically.</para>
+ 
+   <para>When the reboot is complete, the LFS system is ready for use and
+   more software may be added to suit your needs.</para>
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/chapter09/theend.xml BOOK-multilib/chapter09/theend.xml
+--- BOOK-orig/chapter09/theend.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/chapter09/theend.xml	2018-08-12 21:26:37.417640666 +0200
+@@ -42,7 +42,8 @@
+   out which LFS version is installed on the system. Create this file by
+   running:</para>
+ 
+-<screen revision="sysv"><userinput>echo &version; &gt; /etc/lfs-release</userinput></screen>
++<screen arch="default" revision="sysv"><userinput>echo &version; &gt; /etc/lfs-release</userinput></screen>
++<screen arch="multilib" revision="sysv"><userinput>echo &version;-multilib &gt; /etc/lfs-release</userinput></screen>
+ 
+   <para revision="systemd">Creating the file
+   <filename>/etc/lfs-release</filename> is recommended for compatibility with
+@@ -56,12 +57,18 @@
+   new system with respect to the Linux Standards Base (LSB).  To create
+   this file, run:</para>
+ 
+-<screen revision="sysv"><userinput>cat &gt; /etc/lsb-release &lt;&lt; "EOF"
++<screen arch="default" revision="sysv"><userinput>cat &gt; /etc/lsb-release &lt;&lt; "EOF"
+ DISTRIB_ID="Linux From Scratch"
+ DISTRIB_RELEASE="&version;"
+ DISTRIB_CODENAME="&lt;your name here&gt;"
+ DISTRIB_DESCRIPTION="Linux From Scratch"
+ EOF</userinput></screen>
++<screen arch="multilib" revision="sysv"><userinput>cat &gt; /etc/lsb-release &lt;&lt; "EOF"
++DISTRIB_ID="Linux From Scratch"
++DISTRIB_RELEASE="&version;-multilib"
++DISTRIB_CODENAME="&lt;your name here&gt;"
++DISTRIB_DESCRIPTION="Linux From Scratch"
++EOF</userinput></screen>
+ 
+ <screen revision="systemd"><userinput>cat &gt; /etc/lsb-release &lt;&lt; "EOF"
+ DISTRIB_ID="Linux From Scratch"
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/Makefile BOOK-multilib/Makefile
+--- BOOK-orig/Makefile	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/Makefile	2018-08-12 09:47:08.677198296 +0200
+@@ -34,6 +34,15 @@
+   DUMPDIR         ?= ~/lfs-sysd-commands
+ endif
+ 
++ifndef ARCH
++  ARCH = default
++endif
++ifneq ($(ARCH), default)
++  ifneq ($(ARCH), multilib)
++    $(error ARCH must be either 'default' (default if unset) or 'multilib'.)
++  endif
++endif
++
+ book: validate profile-html
+ 	@echo "Generating chunked XHTML files at $(BASEDIR)/ ..."
+ 	$(Q)xsltproc --nonet                          \
+@@ -130,6 +139,7 @@
+                 --xinclude                            \
+                 --output $(RENDERTMP)/lfs-html2.xml   \
+                 --stringparam profile.revision $(REV) \
++                --stringparam profile.arch $(ARCH)    \
+                 stylesheets/lfs-xsl/profile.xsl       \
+                 index.xml
+ 
+@@ -160,6 +170,7 @@
+ 
+ 	$(Q)xsltproc --nonet --xinclude                    \
+                 --stringparam profile.revision $(REV) \
++                --stringparam profile.arch $(ARCH) \
+                 --output $(RENDERTMP)/sysd-wget.xml   \
+                 stylesheets/lfs-xsl/profile.xsl       \
+                 chapter03/chapter03.xml
+@@ -177,6 +188,7 @@
+ 
+ 	$(Q)xsltproc --nonet --xinclude                    \
+                 --stringparam profile.revision $(REV) \
++                --stringparam profile.arch $(ARCH) \
+                 --output $(RENDERTMP)/sysv-md5sum.xml \
+                 stylesheets/lfs-xsl/profile.xsl       \
+                 chapter03/chapter03.xml
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/packages.ent BOOK-multilib/packages.ent
+--- BOOK-orig/packages.ent	2018-08-10 07:50:45.000000000 +0200
++++ BOOK-multilib/packages.ent	2018-08-13 08:25:29.718682872 +0200
+@@ -350,6 +350,14 @@
+ <!ENTITY iproute2-ch6-du "12 MB">
+ <!ENTITY iproute2-ch6-sbu "0.2 SBU">
+ 
++<!ENTITY isl-version "0.18">
++<!ENTITY isl-size "1.6 MB">
++<!ENTITY isl-url "ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-&isl-version;.tar.bz2">
++<!ENTITY isl-md5 "11436d6b205e516635b666090b94ab32">
++<!ENTITY isl-home "http://https://isl.gforge.inria.fr/">
++<!ENTITY isl-ch6-du "20 MB">
++<!ENTITY isl-ch6-sbu "0.1 SBU">
++
+ <!ENTITY kbd-version "2.0.4">
+ <!ENTITY kbd-size "1,008 KB">
+ <!ENTITY kbd-url "https://www.kernel.org/pub/linux/utils/kbd/kbd-&kbd-version;.tar.xz">
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/prologue/architecture.xml BOOK-multilib/prologue/architecture.xml
+--- BOOK-orig/prologue/architecture.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/prologue/architecture.xml	2018-08-12 22:35:51.051408015 +0200
+@@ -40,7 +40,7 @@
+ faster than older 64-bit systems and the LFS authors recommend building
+ on a 64-bit system when given a choice.</para></note>
+ 
+-<para>The default 64-bit build that results from LFS is considered a "pure"
++<para arch="default">The default 64-bit build that results from LFS is considered a "pure"
+ 64-bit system. That is, it supports 64-bit executables only. Building a
+ "multi-lib" system requires compiling many applications twice, once for a
+ 32-bit system and once for a 64-bit system. This is not directly supported in
+@@ -48,6 +48,30 @@
+ instructions needed for a straightforward base Linux system.  You can refer to
+ the <ulink url="http://trac.clfs.org/">Cross Linux From Scratch</ulink>
+ project for this advanced topic.</para>
++<para arch="multilib">You are reading the <emphasis>LFS-&version;-multilib</emphasis>
++book. Continue
++reading makes only sence if you are working on a 64-bit architecture. You cannot
++build multilib on 32-bit machines. Building a multilib system requires compiling
++many applications twice, once for a 32-bit system and once for a 64-bit system.
++Even more, there are three versions (32-bit, x32-bit and 64-bit) which means
++that several packages needs to be compiled three times. Its a time consuming
++task. Multilib goes a bit beyond the basic educational approach of LFS which is
++showing you how to build a Linux system. So, if you want to see how a
++Linux system is created, you might not need to run thru the multilib build
++process. You should use the "standard" LFS book for learning.</para>
++<para arch="multilib">Nevertheless, advanced users which use the newly built
++system as their day-to-day platform, may come across the situation that there
++is (still) software which is not available as 64-bit software and cannot 
++recompiled because their sources are not available. An example for such a
++situation is a third-party printer or video driver which is only available
++as 32-bit binary package. Building a multilib system can solve this issue.</para>
++<para arch="multilib">That said, continue only if
++<itemizedlist>
++  <listitem><para>you have a x86_64 compatible machine</para></listitem>
++  <listitem><para>you already have experiences in doing LFS</para></listitem>
++  <listitem><para>you really have the need for 32-bit support</para></listitem>
++</itemizedlist>
++</para>
+ 
+ <!-- This does not appear to be valid for LFS/BLFS any more
+ <para>There is one last comment about 64-bit systems. There are some older
+diff -Naur -x .svn -x 'lfs-bootscripts-*.tar.bz2' -x appendices BOOK-orig/prologue/bookinfo.xml BOOK-multilib/prologue/bookinfo.xml
+--- BOOK-orig/prologue/bookinfo.xml	2018-08-10 07:50:46.000000000 +0200
++++ BOOK-multilib/prologue/bookinfo.xml	2018-08-12 21:29:29.739266165 +0200
+@@ -7,7 +7,8 @@
+ 
+ <bookinfo>
+   <title>Linux From Scratch</title>
+-  <subtitle revision='sysv'   >Version &version; </subtitle>
++  <subtitle arch="default" revision='sysv'>Version &version; </subtitle>
++  <subtitle arch="multilib" revision='sysv'>Version &version;-multilib </subtitle>
+   <subtitle revision='systemd'>Version &versiond;</subtitle>
+ 
+   <authorgroup>
+@@ -29,6 +30,10 @@
+       <firstname>Editor: DJ</firstname>
+       <surname>Lucas</surname>
+     </author>
++    <author arch="multilib">
++      <firstname>Editor: Thomas</firstname>
++      <surname>Trepl</surname>
++    </author>
+   </authorgroup>
+ 
+   <copyright id="copyright">

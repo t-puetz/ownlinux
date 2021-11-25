@@ -1,0 +1,31 @@
+--- binary-io.h 2016-12-31 13:54:41.000000000 +0000
++++ binary-io.h.new     2018-08-09 21:09:12.605304406 +0000
+@@ -33,6 +33,25 @@
+ # define BINARY_IO_INLINE _GL_INLINE
+ #endif
+
++/* For systems that distinguish between text and binary I/O.
++   O_BINARY is usually declared in fcntl.h  */
++#if !defined O_BINARY && defined _O_BINARY
++  /* For MSC-compatible compilers.  */
++# define O_BINARY _O_BINARY
++# define O_TEXT _O_TEXT
++#endif
++
++#if defined __BEOS__ || defined __HAIKU__
++  /* BeOS 5 and Haiku have O_BINARY and O_TEXT, but they have no effect.  */
++# undef O_BINARY
++# undef O_TEXT
++#endif
++
++#ifndef O_BINARY
++# define O_BINARY 0
++# define O_TEXT 0
++#endif
++
+ /* set_binary_mode (fd, mode)
+    sets the binary/text I/O mode of file descriptor fd to the given mode
+    (must be O_BINARY or O_TEXT) and returns the previous mode.  */
+
+
+
